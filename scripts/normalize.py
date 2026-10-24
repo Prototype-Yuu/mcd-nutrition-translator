@@ -24,6 +24,7 @@ import json
 import re
 import sys
 import unicodedata
+import csv
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
@@ -125,6 +126,12 @@ def _similarity(left: str, right: str) -> float:
 # --------------------------------------------------------------------------
 
 
+#: Combo / bundle markers. A combo's nutrition is the *sum of its parts*, not
+#: the value of any single component, so a combo name must never be matched
+#: against a single-item row by fuzzy similarity.
+_COMBO = re.compile(r"(套餐|三件套|四件套|八件套|双人餐|分享餐|随心选|十翅|双拼|全家桶|拼盘|精选|桶)")
+
+
 @dataclass
 class MatchResult:
     status: str  # "matched" | "ambiguous" | "unmatched"
@@ -156,12 +163,23 @@ class NameMatcher:
 
     TIERS = ("exact", "stripped", "alias", "containment", "fuzzy")
 
-    def __init__(self, aliases: dict[str, str] | None = None, fuzzy_threshold: float = 0.82):
+    def __init__(
+        self,
+        aliases: dict[str, str] | None = None,
+        fuzzy_threshold: float = 0.82,
+        enable_containment: bool = False,
+        enable_fuzzy: bool = False,
+    ):
         self._exact: dict[str, list[str]] = {}
         self._stripped: dict[str, list[str]] = {}
         self._display: dict[str, str] = {}
         self._aliases = {normalize_name(k): normalize_name(v) for k, v in (aliases or {}).items()}
         self.fuzzy_threshold = fuzzy_threshold
+        # Fuzzy and containment are OFF by default: on the real dataset they
+        # only ever matched combos to their single-item components, which
+        # understates the combo's nutrition. Correctness over coverage.
+        self.enable_containment = enable_containment
+        self.enable_fuzzy = enable_fuzzy
 
     # -- index -------------------------------------------------------------
 
@@ -191,14 +209,12 @@ class NameMatcher:
         if exact:
             return exact
 
-        stripped = self._resolve(self._stripped.get(strip_qualifiers(normalized)), "stripped", 0.95)
-        if stripped:
-            return stripped
-
+        # Alias runs before qualifier-stripping: a recorded default (e.g. a
+        # generic "可乐" mapped to "可乐中杯") is a deliberate choice and must
+        # win over the "ambiguous across three cup sizes" the stripped tier
+        # would otherwise report.
         alias_target = self._aliases.get(normalized)
         if alias_target:
-            # An alias may point at a display name, so try the exact index and
-            # then the qualifier-stripped index before giving up.
             aliased = self._resolve(self._exact.get(alias_target), "alias", 0.92)
             if aliased:
                 return aliased
@@ -208,11 +224,22 @@ class NameMatcher:
             if aliased:
                 return aliased
 
-        contained = self._containment(normalized)
-        if contained:
-            return contained
+        stripped = self._resolve(self._stripped.get(strip_qualifiers(normalized)), "stripped", 0.95)
+        if stripped:
+            return stripped
 
-        return self._fuzzy(normalized)
+        if _COMBO.search(normalized):
+            return MatchResult("unmatched", "combo")
+
+        if self.enable_containment:
+            contained = self._containment(normalized)
+            if contained:
+                return contained
+
+        if self.enable_fuzzy:
+            return self._fuzzy(normalized)
+
+        return MatchResult("unmatched", "no_tier")
 
     def _resolve(self, keys: list[str] | None, method: str, score: float) -> MatchResult | None:
         if not keys:
@@ -285,8 +312,61 @@ NUTRITION_FIELDS: dict[str, tuple[str, ...]] = {
 }
 NUTRITION_ENERGY_KJ = ("energyKj", "energy_kj", "kj", "energyKJ")
 
-NAME_FIELDS = ("name", "foodName", "mealName", "productName", "title", "cnName")
-CODE_FIELDS = ("code", "mealCode", "productCode", "id", "sku", "itemCode")
+NAME_FIELDS = ("name", "productName", "foodName", "mealName", "title", "cnName")
+CODE_FIELDS = ("code", "mealCode", "meal_code", "productCode", "id", "sku", "itemCode")
+
+
+# --------------------------------------------------------------------------
+# compact-table parsing
+# --------------------------------------------------------------------------
+
+#: `list-nutrition-foods` does not return JSON. Its ``data`` field is a single
+#: string in a compact tabular notation:
+#:
+#:     [160]{productName,nutritionDescription,energyKj,...}:
+#:       猪柳麦满分,null,1288,308,16,16,24,781,213
+#:
+#: A row count, a field list, then indented CSV. Parsed here so that every
+#: other module can keep assuming plain rows.
+_HEADER = re.compile(r"^\[(\d+)\]\{([^}]*)\}\s*:\s*$")
+
+
+def parse_compact_table(text: str) -> list[dict]:
+    """Parse the compact ``[n]{fields}:`` notation into a list of dicts."""
+    if not isinstance(text, str):
+        raise TypeError(f"expected str, got {type(text).__name__}")
+
+    lines = [line for line in text.splitlines() if line.strip()]
+    if not lines:
+        return []
+
+    header = _HEADER.match(lines[0].strip())
+    if not header:
+        # Not the compact notation -- maybe it is plain JSON after all.
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"unrecognised table format: {lines[0][:80]!r}") from exc
+        return payload if isinstance(payload, list) else [payload]
+
+    declared = int(header.group(1))
+    fields = [field.strip() for field in header.group(2).split(",") if field.strip()]
+
+    rows: list[dict] = []
+    for line in lines[1:]:
+        cells = next(csv.reader([line.strip()]))
+        if len(cells) != len(fields):
+            raise ValueError(
+                f"row has {len(cells)} cells, header declares {len(fields)}: {line[:80]!r}"
+            )
+        rows.append(
+            {field: (None if cell.strip() == "null" else cell.strip()) for field, cell in zip(fields, cells)}
+        )
+
+    if declared != len(rows):
+        raise ValueError(f"header declares {declared} rows, parsed {len(rows)}")
+    return rows
+
 
 
 def _first_key(row: dict, candidates: tuple[str, ...]) -> tuple[str | None, Any]:
@@ -412,6 +492,8 @@ def main(argv: list[str] | None = None) -> int:
         nutrition_raw = json.load(handle)
     with open(args.menu, encoding="utf-8") as handle:
         menu_raw = json.load(handle)
+    if isinstance(menu_raw, dict) and "items" in menu_raw:
+        menu_raw = menu_raw["items"]
     aliases = None
     if args.aliases:
         with open(args.aliases, encoding="utf-8") as handle:

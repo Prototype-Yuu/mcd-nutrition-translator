@@ -47,12 +47,12 @@ agent_created: true
 | X 卡以内 / 蛋白多点 / 多少钱以内 / 帮我凑 | 配平（L1） | `list-nutrition-foods` + `query-meals` | 对齐 → `mealcard.py --solve` |
 | 早上吃了…晚上还能吃啥 / 今天还剩多少 | 全天累计（L2） | 同上 | 累计已摄入 → 求剩余额度 |
 | 附近 / 哪家店 / 地址 / 有没有这家 | 找店 | `query-nearby-stores` | 按营业状态过滤 |
-| 有什么 / 菜单 / 卖不卖 XX | 看菜单 | `query-meals` | `query-meal-detail` 取名 → 可选 `calculate-price` |
+| 有什么 / 菜单 / 卖不卖 XX | 看菜单 | `query-meals` | 返回的 `data.meals` 已含名称与价格，直接分组展示；套餐组成需看时再 `query-meal-detail` |
 | 券 / 优惠 / 活动 / 便宜 / 划算 | 省钱 | `campaign-calendar` + `available-coupons` | `query-my-coupons` → 试算 |
 | 帮我点 / 下单 / 来一份 | 下单 | `calculate-price` | 复述 → 同意 → `create-order` |
 | 过敏 / 含不含 / 花生 / 麸质 / 素 / 清真 | 边界 | **不调 Tool** | `references/dietary-boundaries.md` |
 
-**调用预算**（防止一次会话吃光 600 次/分钟配额）：看菜单 = 1 次 `query-meals` + 最多 15 次 `query-meal-detail`；超预算就只报名称，价格改为"要我实算吗"。
+**调用预算**（防止一次会话吃光 600 次/分钟配额）：看菜单 = 1 次 `query-meals`（名称+价格已含）；需要套餐组成时再 `query-meal-detail`。超预算就只报已拿到的内容。
 
 ## 三层工作流
 
@@ -69,7 +69,7 @@ agent_created: true
 
 用户说了热量上限、蛋白下限、钠上限或预算，才进入这一层。
 
-1. 先取门店菜单（`query-meals` → `query-meal-detail`），把候选压到 15–25 个。
+1. 先取门店菜单（`query-meals`，一次返回 129 个餐品的名称+价格），把候选压到 15–25 个。
 2. 对齐营养，把可计算的候选喂给 `mealcard.py --solve`。
 3. 输出 2–5 个组合表，标一句"最划算的一单"。
 4. 可对齐餐品少于 3 个 → 如实说"能对上数据的餐品太少，凑不出来"，不要用估算填充。

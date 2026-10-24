@@ -61,6 +61,26 @@ class MatcherTests(unittest.TestCase):
         result = self.matcher.match("鸡腿堡")
         self.assertNotEqual(result.status, "matched")
 
+    def test_combo_is_never_matched_to_a_single_item(self) -> None:
+        # A combo's nutrition is the sum of its parts, not the single burger.
+        # Fuzzy/containment are off by default, and the combo marker adds a
+        # second guard, so "培根蔬萃双层牛堡三件套" must NOT resolve to the
+        # single "培根蔬萃双层牛堡".
+        matcher = NameMatcher()
+        matcher.add("培根蔬萃双层牛堡", "培根蔬萃双层牛堡")
+        result = matcher.match("培根蔬萃双层牛堡三件套")
+        self.assertEqual(result.status, "unmatched")
+        self.assertEqual(result.method, "combo")
+
+    def test_fuzzy_is_disabled_by_default(self) -> None:
+        matcher = NameMatcher()
+        matcher.add("巨无霸", "巨无霸")
+        self.assertEqual(matcher.match("巨无霸汉堡").status, "unmatched")
+        # ...but turning it on changes behaviour, proving the switch works.
+        matcher.enable_fuzzy = True
+        matcher.fuzzy_threshold = 0.5
+        self.assertEqual(matcher.match("巨无霸汉堡").status, "matched")
+
     def test_unrelated_names_do_not_match(self) -> None:
         # The deliberate mismatch fixture: shares "蛋" and "风" but is a
         # different product entirely.

@@ -1,0 +1,41 @@
+{
+  "title": "巨无霸 + 中薯条 + 中可乐",
+  "items": [
+    {
+      "name": "中薯条",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 289.0,
+        "protein_g": 4.0,
+        "fat_g": 12.0,
+        "carb_g": 38.0,
+        "sodium_mg": 165.0,
+        "calcium_mg": 18.0
+      }
+    },
+    {
+      "name": "巨无霸",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 513.0,
+        "protein_g": 27.0,
+        "fat_g": 26.0,
+        "carb_g": 42.0,
+        "sodium_mg": 961.0,
+        "calcium_mg": 171.0
+      }
+    },
+    {
+      "name": "可乐中杯",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 147.0,
+        "protein_g": 0.0,
+        "fat_g": 0.0,
+        "carb_g": 36.0,
+        "sodium_mg": 0.0,
+        "calcium_mg": 10.0
+      }
+    }
+  ]
+}

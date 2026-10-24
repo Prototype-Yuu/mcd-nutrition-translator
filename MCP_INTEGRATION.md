@@ -40,16 +40,28 @@ POST https://open.mcd.cn/mcp   -> 405    (GET 页面，不是 API 端点)
 
 | Tool | 调用位置 | 作用 | 验证状态 |
 | --- | --- | --- | --- |
-| `now-time-info` | 每次会话第一步 | 确定营业状态、早餐时段、活动有效期 | 待实测 |
-| `list-nutrition-foods` | L0 / L1 / L2 全部 | 六项营养数值，项目唯一数据源 | 待实测 |
-| `query-nearby-stores` | 找店 | 定位可下单门店 | 待实测 |
-| `query-meals` | L1 / L2 | 取门店餐品编码与标签 | 待实测 |
-| `query-meal-detail` | L1 / L2 | 按编码取名称与套餐组成 | 待实测 |
-| `calculate-price` | L1 报价 | 计算组合实付价 | 待实测 |
-| `campaign-calendar` / `available-coupons` | 省钱 | 活动与券 | 待实测 |
-| `create-order` | 下单 | 返回支付链接，不代付 | 待实测 |
+| `now-time-info` | 每次会话第一步 | 确定营业状态、早餐时段、活动有效期 | ✅ 已实测 |
+| `list-nutrition-foods` | L0 / L1 / L2 全部 | 六项营养数值，项目唯一数据源 | ✅ 已实测（160 条） |
+| `query-nearby-stores` | 找店 | 定位可下单门店 | ✅ 已实测 |
+| `query-meals` | L1 / L2 | 取餐品编码、名称、价格 | ✅ 已实测（单店 129 个，一次调用含名称+价格） |
+| `query-meal-detail` | L1 看套餐组成 | 按编码查套餐构成与特调 | 按需（本仓库未单独调用） |
+| `calculate-price` | L1 报价 | 计算组合实付价 | ✅ 已实测（价格单位为分） |
+| `campaign-calendar` | 省钱 | 活动日历 | ✅ 已实测 |
+| `available-coupons` | 省钱 | 可领券 | 按需 |
+| `create-order` | 下单 | 返回支付链接，不代付 | 仅估价，未实付 |
 
-> "待实测"会在取得 Token 后逐个填成"已实测 + 关键字段 + 时间戳"，并补进 `references/tool-contracts.md`。**没有被真实调用过的能力，本文档不会写成已验证。**
+> 已验证项均来自 2026-10-24 15:16–15:26（CST）的真实调用，原始字段与返回形态记在 `references/tool-contracts.md`。**没有被真实调用过的能力，本文档不会写成已验证。**
+
+## 3.1 实测发现（对官方文档的三处修正）
+
+1. **`tools/list` 返回 35 个工具，不是官方 README 写的 33 个**。多出 `query-promotions`、`query-survey-coupon`；两个 party 工具实际命名是 `query-party-store-session` / `query-party-store-date`（README 写 `query-partystore-*`）。
+2. **`query-meals` 一次就能拿到名称和价格**。README 暗示要先 `query-meals` 再逐个 `query-meal-detail` 取名——实测 `data.meals` 是 `code → {name, currentPrice, originalPrice}` 字典，单店 129 个餐品名称+价格一次调用齐全。
+3. **`calculate-price` 的价格单位是分**（2790 = ¥27.9），展示前要 ÷100。
+4. **`list-nutrition-foods` 返回的是压缩表字符串**（`[160]{字段}:` + 缩进 CSV），不是 JSON 数组，且 `nutritionDescription` 全 null（无份量说明，按"每份"理解）。
+
+## 3.2 名称对齐与覆盖率
+
+营养表（160 条）与菜单（129 条）之间没有共同键，只能靠名称对齐。实测命中 **37 条（28.7%）**，零误配；45 条套餐未命中（营养表无套餐聚合值）。匹配器默认关闭字符相似匹配——实测它只会把套餐错配成单品。完整数字与失败样例见 `data/alignment-coverage.md`。
 
 ## 4. 调用流程
 
@@ -62,15 +74,15 @@ now-time-info
             └─ mealcard.py           # 合计 + 类比 + 外号 + 一句提醒
 ```
 
-关键点：**营养表与菜单没有共同的键**。营养表按名称给数据、没有编码；菜单按编码给数据、没有名称。所以中间必须有一个显式的对齐层，而且对齐结果要能审计（命中层级 + 分数 + 三态），不能静默猜。
+关键点：**营养表与菜单没有共同的键**。营养表按名称给数据、没有编码；菜单按编码给数据、名称在 `data.meals` 里。所以中间必须有一个显式的对齐层，而且对齐结果要能审计（命中层级 + 分数 + 三态），不能静默猜。
 
 ### L1 配平
 
 ```
-query-nearby-stores -> query-meals -> query-meal-detail(×N)
+query-nearby-stores -> query-meals      # 一次拿 129 个餐品（含名称+价格）
   -> 对齐营养 -> 候选压到 15-25 个
   -> mealcard.py --solve            # 穷举 C(25,2)=300，确定性输出
-  -> calculate-price                # 复核实付价
+  -> calculate-price                # 复核实付价（价格单位为分）
 ```
 
 ### 写操作

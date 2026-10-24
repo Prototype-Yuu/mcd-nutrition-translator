@@ -1,17 +1,22 @@
 # Tool 目录
 
-> 来源：麦当劳中国官方仓库 `M-China/mcd-mcp-server` README（2026-10-01 更新）。
-> 状态标记：`doc` = 仅据官方文档；`verified` = 本仓库以真实 Token 调用成功。逐个工具的实际验证结果记在 `tool-contracts.md`。
+> 来源：`tools/list` 实测（2026-10-24）为主，官方 README 为辅。
+> **实测共 35 个工具，不是官方 README 写的 33 个。** 两处命名不同：`query-party-store-session` / `query-party-store-date`（README 写 `query-partystore-*`）；并多出 `query-promotions`、`query-survey-coupon`。
+> 状态标记：`verified` = 本仓库以真实 Token 调用成功；`doc` = 仅据 `tools/list` 的 schema 描述。
+
+## 重要更正：菜单一次就能拿到名称和价格
+
+官方 README 暗示要先 `query-meals` 再逐个 `query-meal-detail` 才能拿到餐品名称——**实测相反**：`query-meals` 返回的 `data.meals` 是 `code → {name, currentPrice, originalPrice}` 字典，一次调用 129 个餐品名称+价格全齐。`query-meal-detail` 仅在需要看套餐组成/特调时用。
 
 ## 1. 门店与菜单（7）
 
 | Tool | 用途 | 状态 |
 | --- | --- | --- |
-| `query-nearby-stores` | 查附近可用门店 | doc |
+| `query-nearby-stores` | 查附近可用门店 | verified |
 | `delivery-query-stores` | 查收货地址附近可配送门店 | doc |
 | `delivery-query-addresses` | 查已保存的配送地址 | doc |
 | `delivery-create-address` | 新增配送地址（**写操作**） | doc |
-| `query-meals` | 查门店可售餐品（分类、编码、标签；**不含名称与价格**） | doc |
+| `query-meals` | 查门店可售餐品（含名称与价格，见顶部更正） | verified |
 | `query-meal-detail` | 按编码查餐品详情与套餐组成 | doc |
 | `query-meal-assistance` | 查助餐服务（**仅企业团餐场景**，不是通用问答） | doc |
 
@@ -19,15 +24,15 @@
 
 | Tool | 用途 | 状态 |
 | --- | --- | --- |
-| `list-nutrition-foods` | 餐品营养信息列表：能量、蛋白质、脂肪、碳水、钠、钙 | doc |
+| `list-nutrition-foods` | 餐品营养信息列表：能量、蛋白质、脂肪、碳水、钠、钙 | verified |
 
-**这是本项目的核心数据源，也是最大的短板**：它只有六项指标，没有餐品编码，因此与菜单之间没有 join key，只能靠名称对齐。详见 `data-alignment.md`。
+**这是本项目的核心数据源，也是最大的短板**：它只有六项指标，没有餐品编码，因此与菜单之间没有 join key，只能靠名称对齐。实测 160 行、`nutritionDescription` 全 null（无份量说明，按"每份"理解）。详见 `data-alignment.md`。
 
 ## 3. 算价与订单（5）
 
 | Tool | 用途 | 状态 |
 | --- | --- | --- |
-| `calculate-price` | 按商品列表（可带券）计算金额、配送费、优惠、应付 | doc |
+| `calculate-price` | 按商品列表（可带券）计算金额、配送费、优惠、应付 | verified |
 | `create-order` | 创建订单，返回订单详情与支付链接（**写操作**） | doc |
 | `cancel-order` | 取消订单（**写操作**） | doc |
 | `query-order` | 查订单状态与内容 | doc |
@@ -37,7 +42,7 @@
 
 | Tool | 用途 | 状态 |
 | --- | --- | --- |
-| `campaign-calendar` | 当月营销活动日历 | doc |
+| `campaign-calendar` | 当月营销活动日历 | verified |
 | `available-coupons` | 麦麦省可领券列表 | doc |
 | `auto-bind-coupons` | 一键领取全部可领券（**写操作，不可撤回**） | doc |
 | `query-my-coupons` | 我账户下的券 | doc |
@@ -66,7 +71,7 @@
 
 | Tool | 用途 | 状态 |
 | --- | --- | --- |
-| `now-time-info` | 返回当前完整时间 | doc |
+| `now-time-info` | 返回当前完整时间 | verified |
 
 ## 本项目实际用到哪些
 
