@@ -116,7 +116,7 @@ agent_created: true
 
 ## 参考文件
 
-- `references/tool-contracts.md` — 33 个 Tool 的真实入参、返回字段、错误码
+- `references/tool-contracts.md` — 35 个 Tool 的真实入参、返回字段、错误码
 - `references/tools-catalog.md` — Tool 分组与已验证状态
 - `references/analogy-basis.md` — 类比换算基准与它的来源等级
 - `references/dietary-boundaries.md` — 拒答话术与禁止词表
