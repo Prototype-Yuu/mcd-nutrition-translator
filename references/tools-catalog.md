@@ -17,7 +17,7 @@
 | `delivery-query-addresses` | 查已保存的配送地址 | doc |
 | `delivery-create-address` | 新增配送地址（**写操作**） | doc |
 | `query-meals` | 查门店可售餐品（含名称与价格，见顶部更正） | verified |
-| `query-meal-detail` | 按编码查餐品详情与套餐组成 | doc |
+| `query-meal-detail` | 按编码查餐品详情与套餐组成（拆解套餐营养的核心） | verified |
 | `query-meal-assistance` | 查助餐服务（**仅企业团餐场景**，不是通用问答） | doc |
 
 ## 2. 营养（1）

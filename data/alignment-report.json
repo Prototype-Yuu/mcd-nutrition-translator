@@ -1,14 +1,14 @@
 {
   "nutrition_total": 160,
   "menu_total": 129,
-  "matched": 37,
+  "matched": 31,
   "ambiguous": 0,
-  "unmatched": 92,
-  "rate": 0.2868,
+  "unmatched": 98,
+  "rate": 0.2403,
   "by_method": {
     "exact": 25,
-    "stripped": 7,
-    "alias": 5
+    "alias": 5,
+    "stripped": 1
   },
   "results": [
     {
@@ -109,10 +109,9 @@
     {
       "meal_code": "9900005460",
       "name": "麦香鱼套餐",
-      "status": "matched",
-      "method": "stripped",
-      "score": 0.95,
-      "key": "麦香鱼"
+      "status": "unmatched",
+      "method": "combo",
+      "score": 0.0
     },
     {
       "meal_code": "9900005462",
@@ -132,10 +131,9 @@
     {
       "meal_code": "9900005464",
       "name": "双层吉士汉堡套餐",
-      "status": "matched",
-      "method": "stripped",
-      "score": 0.95,
-      "key": "双层吉士汉堡"
+      "status": "unmatched",
+      "method": "combo",
+      "score": 0.0
     },
     {
       "meal_code": "9900004236",
@@ -191,10 +189,9 @@
     {
       "meal_code": "9900005449",
       "name": "吉士汉堡包套餐",
-      "status": "matched",
-      "method": "stripped",
-      "score": 0.95,
-      "key": "吉士汉堡包"
+      "status": "unmatched",
+      "method": "combo",
+      "score": 0.0
     },
     {
       "meal_code": "9900014837",
@@ -251,10 +248,9 @@
     {
       "meal_code": "9900005453",
       "name": "麦香鸡套餐",
-      "status": "matched",
-      "method": "stripped",
-      "score": 0.95,
-      "key": "麦香鸡"
+      "status": "unmatched",
+      "method": "combo",
+      "score": 0.0
     },
     {
       "meal_code": "507394",
@@ -762,10 +758,9 @@
     {
       "meal_code": "9900009242",
       "name": "“苹板”支撑Pro套餐",
-      "status": "matched",
-      "method": "stripped",
-      "score": 0.95,
-      "key": "“苹板”支撑Pro"
+      "status": "unmatched",
+      "method": "combo",
+      "score": 0.0
     },
     {
       "meal_code": "507389",
@@ -778,10 +773,9 @@
     {
       "meal_code": "9900009245",
       "name": "牛气满满套餐",
-      "status": "matched",
-      "method": "stripped",
-      "score": 0.95,
-      "key": "牛气满满"
+      "status": "unmatched",
+      "method": "combo",
+      "score": 0.0
     },
     {
       "meal_code": "507387",

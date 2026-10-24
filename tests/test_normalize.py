@@ -72,6 +72,15 @@ class MatcherTests(unittest.TestCase):
         self.assertEqual(result.status, "unmatched")
         self.assertEqual(result.method, "combo")
 
+    def test_combo_with_taocan_suffix_is_not_stripped_to_single(self) -> None:
+        # "套餐" is NOT a strippable qualifier: stripping it would turn
+        # "麦香鱼套餐" into the single "麦香鱼" and understate the combo.
+        matcher = NameMatcher()
+        matcher.add("麦香鱼", "麦香鱼")
+        result = matcher.match("麦香鱼套餐")
+        self.assertEqual(result.status, "unmatched")
+        self.assertEqual(result.method, "combo")
+
     def test_fuzzy_is_disabled_by_default(self) -> None:
         matcher = NameMatcher()
         matcher.add("巨无霸", "巨无霸")

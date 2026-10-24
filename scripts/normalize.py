@@ -35,9 +35,11 @@ from typing import Any, Iterable
 _PAREN = re.compile(r"[（(][^（）()]{0,24}[)）]")
 _PUNCT = re.compile(r"[\s\-_·•・,，.。、:：;；!！?？“”\"'‘’《》\[\]【】/+＋]")
 # Trailing qualifiers that describe packaging or portion, not identity.
+# "套餐" is deliberately NOT here: stripping it turns "麦香鱼套餐" into the
+# single "麦香鱼" and understates a combo. Combo names are caught earlier by
+# _COMBO and routed to decomposition instead.
 _QUALIFIERS = (
     "单点",
-    "套餐",
     "中号",
     "大号",
     "小号",
@@ -209,6 +211,12 @@ class NameMatcher:
         if exact:
             return exact
 
+        # Combo names must never degrade into a single-item match through the
+        # tiers below: a combo's nutrition is the sum of its parts, so it gets
+        # routed to decomposition instead.
+        if _COMBO.search(normalized):
+            return MatchResult("unmatched", "combo")
+
         # Alias runs before qualifier-stripping: a recorded default (e.g. a
         # generic "可乐" mapped to "可乐中杯") is a deliberate choice and must
         # win over the "ambiguous across three cup sizes" the stripped tier
@@ -227,9 +235,6 @@ class NameMatcher:
         stripped = self._resolve(self._stripped.get(strip_qualifiers(normalized)), "stripped", 0.95)
         if stripped:
             return stripped
-
-        if _COMBO.search(normalized):
-            return MatchResult("unmatched", "combo")
 
         if self.enable_containment:
             contained = self._containment(normalized)
