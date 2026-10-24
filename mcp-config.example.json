@@ -1,0 +1,12 @@
+{
+  "_comment": "McDonald's China MCP server, redacted example. Replace ${MCD_MCP_TOKEN} with your own token at run time. Never commit a real token.",
+  "mcpServers": {
+    "mcd-mcp": {
+      "type": "streamablehttp",
+      "url": "https://mcp.mcd.cn",
+      "headers": {
+        "Authorization": "Bearer ${MCD_MCP_TOKEN}"
+      }
+    }
+  }
+}

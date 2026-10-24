@@ -1,0 +1,46 @@
+{
+  "note": "Sample input for the default (zero-setup) card mode. Values are illustrative placeholders; replace with real list-nutrition-foods rows.",
+  "title": "巨无霸 + 中薯 + 中可乐",
+  "price_cny": 32.5,
+  "items": [
+    {
+      "name": "巨无霸",
+      "meal_code": "1100",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 550,
+        "protein_g": 25,
+        "fat_g": 30,
+        "carb_g": 45,
+        "sodium_mg": 1000,
+        "calcium_mg": 120
+      }
+    },
+    {
+      "name": "中薯条",
+      "meal_code": "3755",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 340,
+        "protein_g": 4,
+        "fat_g": 16,
+        "carb_g": 44,
+        "sodium_mg": 250,
+        "calcium_mg": 20
+      }
+    },
+    {
+      "name": "可口可乐（中）",
+      "meal_code": "4100",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 150,
+        "protein_g": 0,
+        "fat_g": 0,
+        "carb_g": 38,
+        "sodium_mg": 30,
+        "calcium_mg": 0
+      }
+    }
+  ]
+}

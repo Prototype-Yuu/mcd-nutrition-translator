@@ -1,0 +1,25 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.token
+mcd_token*
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# local run artifacts
+/tmp/
+/out/
+*.log

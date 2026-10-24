@@ -1,0 +1,38 @@
+{
+  "note": "Negative fixture: one item has no nutrition row and one has an unknown serving basis. The card must refuse to total instead of guessing.",
+  "title": "含未收录餐品的一单",
+  "items": [
+    {
+      "name": "巨无霸",
+      "meal_code": "1100",
+      "basis": "per_serving",
+      "nutrition": {
+        "kcal": 550,
+        "protein_g": 25,
+        "fat_g": 30,
+        "carb_g": 45,
+        "sodium_mg": 1000,
+        "calcium_mg": 120
+      }
+    },
+    {
+      "name": "龙焰芝士棒鸡腿堡三件套",
+      "meal_code": "9900016075",
+      "basis": "per_serving",
+      "nutrition": null
+    },
+    {
+      "name": "季节限定小食",
+      "meal_code": "9900016099",
+      "basis": "per_100g",
+      "nutrition": {
+        "kcal": 210,
+        "protein_g": 7,
+        "fat_g": 12,
+        "carb_g": 20,
+        "sodium_mg": 400,
+        "calcium_mg": 30
+      }
+    }
+  ]
+}
